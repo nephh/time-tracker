@@ -1,7 +1,6 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { sql } from "drizzle-orm";
 import {
   index,
@@ -38,19 +37,17 @@ export const posts = createTable(
   }),
 );
 
-const userTable = createTable("user", {
+export const userTable = createTable("user", {
   id: text("id").primaryKey(),
 });
 
-const sessionTable = createTable("session", {
+export const sessionTable = createTable("session", {
   id: text("id").primaryKey().notNull(),
-  userId: text("userId")
+  userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
-  expiresAt: timestamp("expiresAt", {
+  expiresAt: timestamp("expires_at", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
 });
-
-// const adapter = new DrizzlePostgreSQLAdapter(db, sessionTable, userTable);
