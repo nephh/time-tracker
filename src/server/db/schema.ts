@@ -9,8 +9,8 @@ import {
   timestamp,
   varchar,
   text,
+  integer,
 } from "drizzle-orm/pg-core";
-import { db } from ".";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -39,6 +39,8 @@ export const posts = createTable(
 
 export const userTable = createTable("user", {
   id: text("id").primaryKey(),
+  githubId: integer("github_id").unique(),
+  username: text("username"),
 });
 
 export const sessionTable = createTable("session", {
