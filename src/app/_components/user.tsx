@@ -6,5 +6,6 @@ export default async function User() {
   if (!user) {
     return redirect("/login");
   }
-  return <h1>Hi, {user.id}!</h1>;
+
+  return <h1>Hi, {user.username}!</h1>;
 }

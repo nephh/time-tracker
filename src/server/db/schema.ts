@@ -39,7 +39,7 @@ export const posts = createTable(
 
 export const userTable = createTable("user", {
   id: text("id").primaryKey(),
-  githubId: integer("github_id").unique(),
+  githubId: integer("github_id"),
   username: text("username"),
 });
 

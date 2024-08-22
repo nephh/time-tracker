@@ -39,7 +39,7 @@ declare module "lucia" {
   }
 }
 
-interface DatabaseUserAttributes {
+export interface DatabaseUserAttributes {
   githubId: number;
   username: string;
 }

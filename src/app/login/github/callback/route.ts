@@ -29,7 +29,7 @@ export async function GET(request: Request): Promise<Response> {
     const [existingUser] = await db
       .select()
       .from(userTable)
-      .where(eq(userTable.githubId, githubUser.id));
+      .where(eq(userTable.githubId, Number(githubUser.id)));
 
     // Replace this with your own DB client.
     // const existingUser = await db
@@ -57,7 +57,7 @@ export async function GET(request: Request): Promise<Response> {
 
     await db.insert(userTable).values({
       id: userId,
-      githubId: githubUser.id,
+      githubId: Number(githubUser.id),
       username: githubUser.login,
     });
 
@@ -89,6 +89,7 @@ export async function GET(request: Request): Promise<Response> {
         status: 400,
       });
     }
+    console.error("Unexpected error:", e); // Log the error details
     return new Response(null, {
       status: 500,
     });
@@ -96,6 +97,6 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 interface GitHubUser {
-  id: number;
+  id: string;
   login: string;
 }
