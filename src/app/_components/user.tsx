@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { validateRequest } from "@/lib/auth";
+import type { CurrentUser } from "@/lib/types";
 
 export default async function User() {
   const { user } = await validateRequest();
@@ -7,5 +8,7 @@ export default async function User() {
     return redirect("/login");
   }
 
-  return <h1>Hi, {user.username}!</h1>;
+  const currentUser = user as CurrentUser;
+
+  return <h1>Hi, {currentUser.username}!</h1>;
 }
