@@ -1,12 +1,8 @@
 import { Lucia, type Session, type User } from "lucia";
-import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
-import { db } from "../server/db";
-import { sessionTable, userTable } from "../server/db/schema";
+import { adapter } from "../server/db";
 import { GitHub } from "arctic";
 import { cache } from "react";
 import { cookies } from "next/headers";
-
-const adapter = new DrizzlePostgreSQLAdapter(db, sessionTable, userTable);
 
 export const github = new GitHub(
   process.env.GITHUB_CLIENT_ID!,
