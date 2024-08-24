@@ -34,7 +34,7 @@ export function UserAuthForm({
           </span>
         </div>
       </div>
-      <Link href="/login/github">
+      <Link href="/login/github" prefetch={false}>
         <Button
           className="w-full"
           variant="outline"
