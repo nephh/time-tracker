@@ -44,7 +44,7 @@ export const userTable = createTable("user", {
 });
 
 export const sessionTable = createTable("session", {
-  id: text("id").primaryKey().notNull(),
+  id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
@@ -52,4 +52,12 @@ export const sessionTable = createTable("session", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
+});
+
+export const timerTable = createTable("timer", {
+  id: serial("id").primaryKey(),
+  time: integer("time").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => userTable.id),
 });
