@@ -52,11 +52,18 @@ export default function Timer({ user }: TimerProps) {
     });
   }
 
+  function formatTime(seconds: number) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  }
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold">Timer</h1>
-        <div>{timer}</div>
+        <div>{formatTime(timer)}</div>
         <button onClick={handleStartPause}>
           {isRunning ? "Pause" : "Start"}
         </button>

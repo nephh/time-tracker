@@ -21,7 +21,7 @@ export default function RootLayout({
       className={`${GeistSans.variable}`}
       suppressHydrationWarning
     >
-      <body className="h-screen dark:bg-zinc-950">
+      <body className="h-screen bg-gradient-to-br from-zinc-100 to-zinc-300 dark:from-zinc-900 dark:to-zinc-950">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
