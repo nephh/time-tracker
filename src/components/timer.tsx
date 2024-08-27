@@ -2,14 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { api } from "@/trpc/server";
+import { api } from "@/trpc/react";
+import type { User } from "lucia";
 
-export default function Timer() {
+interface TimerProps {
+  user: User;
+}
+
+export default function Timer({ user }: TimerProps) {
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const mutate = api.timer.createTimer.useMutation();
+  const update = api.timer.updateTimer.useMutation();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    console.log(isRunning);
 
     if (isRunning) {
       interval = setInterval(() => {
@@ -23,13 +31,24 @@ export default function Timer() {
   }, [isRunning]);
 
   const handleStartPause = () => {
+    if (isRunning) {
+      handleUpdateTimer();
+    }
+
     setIsRunning((prevIsRunning) => !prevIsRunning);
   };
 
   function handleAddTimer() {
-    const { data } = api.timer.createTimer({
+    mutate.mutate({
       time: timer,
-      userId: "1",
+      userId: user.id,
+    });
+  }
+
+  function handleUpdateTimer() {
+    update.mutate({
+      id: 1,
+      time: timer,
     });
   }
 
@@ -42,7 +61,13 @@ export default function Timer() {
           {isRunning ? "Pause" : "Start"}
         </button>
       </div>{" "}
-      <Button variant="default">Add Timer</Button>
+      <Button
+        variant="default"
+        onClick={() => handleAddTimer()}
+        disabled={mutate.isPending}
+      >
+        Add Timer
+      </Button>
     </div>
   );
 }
