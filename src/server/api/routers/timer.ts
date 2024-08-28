@@ -27,7 +27,8 @@ export const timerRouter = createTRPCRouter({
         time: timerTable.time,
       })
       .from(timerTable)
-      .where(eq(timerTable.userId, ctx.user.id));
+      .where(eq(timerTable.userId, ctx.user.id))
+      .orderBy(timerTable.id);
 
     return timers;
   }),
