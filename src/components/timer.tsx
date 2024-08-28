@@ -1,27 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
 import { api } from "@/trpc/react";
-import type { User } from "lucia";
 
 interface TimerProps {
-  user: User;
+  timerTime: number;
+  id: number;
 }
 
-export default function Timer({ user }: TimerProps) {
-  const [timer, setTimer] = useState(0);
+export default function Timer({ timerTime, id }: TimerProps) {
+  const [time, setTime] = useState(timerTime);
   const [isRunning, setIsRunning] = useState(false);
-  const mutate = api.timer.createTimer.useMutation();
   const update = api.timer.updateTimer.useMutation();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    console.log(isRunning);
 
     if (isRunning) {
       interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer + 1);
+        setTime((prevTime) => prevTime + 1);
       }, 1000);
     }
 
@@ -38,17 +35,10 @@ export default function Timer({ user }: TimerProps) {
     setIsRunning((prevIsRunning) => !prevIsRunning);
   };
 
-  function handleAddTimer() {
-    mutate.mutate({
-      time: timer,
-      userId: user.id,
-    });
-  }
-
   function handleUpdateTimer() {
     update.mutate({
-      id: 1,
-      time: timer,
+      id,
+      time,
     });
   }
 
@@ -63,18 +53,11 @@ export default function Timer({ user }: TimerProps) {
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold">Timer</h1>
-        <div>{formatTime(timer)}</div>
+        <div>{formatTime(time)}</div>
         <button onClick={handleStartPause}>
           {isRunning ? "Pause" : "Start"}
         </button>
       </div>{" "}
-      <Button
-        variant="default"
-        onClick={() => handleAddTimer()}
-        disabled={mutate.isPending}
-      >
-        Add Timer
-      </Button>
     </div>
   );
 }

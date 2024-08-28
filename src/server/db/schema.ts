@@ -56,7 +56,7 @@ export const sessionTable = createTable("session", {
 
 export const timerTable = createTable("timer", {
   id: serial("id").primaryKey(),
-  time: integer("time").notNull(),
+  time: integer("time").notNull().default(0),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
