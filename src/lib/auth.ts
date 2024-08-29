@@ -1,12 +1,18 @@
 import { Lucia, type Session, type User } from "lucia";
 import { adapter } from "../server/db";
-import { GitHub } from "arctic";
+import { GitHub, Google } from "arctic";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
 export const github = new GitHub(
   process.env.GITHUB_CLIENT_ID!,
   process.env.GITHUB_CLIENT_SECRET!,
+);
+
+export const google = new Google(
+  process.env.GOOGLE_CLIENT_ID!,
+  process.env.GOOGLE_CLIENT_SECRET!,
+  "http://localhost:3000/login/google/callback",
 );
 
 export const lucia = new Lucia(adapter, {
@@ -22,6 +28,7 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       githubId: attributes.githubId,
+      googleId: attributes.googleId,
       username: attributes.username,
     };
   },
@@ -37,6 +44,7 @@ declare module "lucia" {
 
 export interface DatabaseUserAttributes {
   githubId: number;
+  googleId: number;
   username: string;
 }
 

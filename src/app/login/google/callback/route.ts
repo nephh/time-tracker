@@ -1,6 +1,6 @@
-import { github, lucia } from "@/lib/auth";
+import { google, lucia } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { OAuth2RequestError } from "arctic";
+import { type GoogleTokens, OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
 import { db } from "@/server/db";
 import { eq } from "drizzle-orm";
@@ -10,50 +10,42 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const storedState = cookies().get("github_oauth_state")?.value ?? null;
-  if (!code || !state || !storedState || state !== storedState) {
+  const storedState = cookies().get("google_oauth_state")?.value ?? null;
+  const storedCodeVerifier =
+    cookies().get("google_code_verifier_state")?.value ?? null;
+  if (
+    !code ||
+    !state ||
+    !storedState ||
+    !storedCodeVerifier ||
+    state !== storedState
+  ) {
     return new Response(null, {
       status: 400,
     });
   }
 
   try {
-    const tokens = await github.validateAuthorizationCode(code);
-    const githubUserResponse = await fetch("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
-      },
-    });
-    const githubUserEmailsResponse = await fetch(
-      "https://api.github.com/user/emails",
+    const tokens: GoogleTokens = await google.validateAuthorizationCode(
+      code,
+      storedCodeVerifier,
+    );
+
+    const googleUserResponse = await fetch(
+      "https://openidconnect.googleapis.com/v1/userinfo",
       {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
         },
       },
     );
-    const githubUserEmails =
-      (await githubUserEmailsResponse.json()) as GitHubUserEmail[];
-    const githubUser = (await githubUserResponse.json()) as GitHubUser;
-    const primaryEmail =
-      githubUserEmails.find((email) => email.primary) ?? null;
 
-    if (!primaryEmail) {
-      return new Response("No primary email address", {
-        status: 400,
-      });
-    }
-
-    if (!primaryEmail.verified) {
-      return new Response("Unverified email", {
-        status: 400,
-      });
-    }
+    const googleUser = (await googleUserResponse.json()) as GoogleUser;
 
     const [existingUser] = await db
       .select()
       .from(userTable)
-      .where(eq(userTable.email, primaryEmail.email));
+      .where(eq(userTable.email, googleUser.email));
 
     if (existingUser) {
       const session = await lucia.createSession(existingUser.id, {});
@@ -64,10 +56,10 @@ export async function GET(request: Request): Promise<Response> {
         sessionCookie.attributes,
       );
 
-      if (!existingUser.githubId) {
+      if (!existingUser.googleId) {
         await db
           .update(userTable)
-          .set({ githubId: githubUser.id })
+          .set({ googleId: googleUser.sub })
           .where(eq(userTable.id, existingUser.id));
       }
 
@@ -83,9 +75,9 @@ export async function GET(request: Request): Promise<Response> {
 
     await db.insert(userTable).values({
       id: userId,
-      githubId: githubUser.id,
-      username: githubUser.login,
-      email: primaryEmail.email,
+      githubId: googleUser.sub,
+      username: googleUser.name,
+      email: googleUser.email,
     });
 
     const session = await lucia.createSession(userId, {});
@@ -116,13 +108,8 @@ export async function GET(request: Request): Promise<Response> {
   }
 }
 
-interface GitHubUser {
-  id: string;
-  login: string;
-}
-
-interface GitHubUserEmail {
+interface GoogleUser {
+  sub: string;
   email: string;
-  primary: boolean;
-  verified: boolean;
+  name: string;
 }

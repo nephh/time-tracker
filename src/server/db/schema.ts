@@ -10,6 +10,8 @@ import {
   varchar,
   text,
   integer,
+  bigint,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -39,7 +41,8 @@ export const posts = createTable(
 
 export const userTable = createTable("user", {
   id: text("id").primaryKey(),
-  githubId: integer("github_id"),
+  githubId: text("github_id"),
+  googleId: text("google_id"),
   username: text("username"),
   email: text("email"),
 });
