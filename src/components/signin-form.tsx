@@ -39,6 +39,22 @@ export function UserAuthForm({
           )}{" "}
           GitHub
         </Button>
+      </Link>{" "}
+      <Link href="/login/google" prefetch={false}>
+        <Button
+          className="w-full"
+          variant="secondary"
+          type="button"
+          disabled={isLoading}
+          onClick={() => setIsLoading(true)}
+        >
+          {isLoading ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.gitHub className="mr-2 h-4 w-4" />
+          )}{" "}
+          Google
+        </Button>
       </Link>
     </div>
   );
