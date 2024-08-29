@@ -41,6 +41,7 @@ export const userTable = createTable("user", {
   id: text("id").primaryKey(),
   githubId: integer("github_id"),
   username: text("username"),
+  email: text("email"),
 });
 
 export const sessionTable = createTable("session", {
@@ -57,6 +58,7 @@ export const sessionTable = createTable("session", {
 export const timerTable = createTable("timer", {
   id: serial("id").primaryKey(),
   time: integer("time").notNull().default(0),
+  dailyTime: integer("daily_time").notNull().default(0),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),

@@ -24,18 +24,23 @@ export async function GET(request: Request): Promise<Response> {
         Authorization: `Bearer ${tokens.accessToken}`,
       },
     });
+    const githubUserEmailsResponse = await fetch(
+      "https://api.github.com/user/emails",
+      {
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+        },
+      },
+    );
+    const githubUserEmails =
+      (await githubUserEmailsResponse.json()) as GitHubUserEmail[];
     const githubUser = (await githubUserResponse.json()) as GitHubUser;
+    const primaryEmail = githubUserEmails.find((email) => email.primary)?.email;
 
     const [existingUser] = await db
       .select()
       .from(userTable)
-      .where(eq(userTable.githubId, Number(githubUser.id)));
-
-    // Replace this with your own DB client.
-    // const existingUser = await db
-    //   .table("user")
-    //   .where("github_id", "=", githubUser.id)
-    //   .get();
+      .where(eq(userTable.email, primaryEmail!));
 
     if (existingUser) {
       const session = await lucia.createSession(existingUser.id, {});
@@ -45,6 +50,14 @@ export async function GET(request: Request): Promise<Response> {
         sessionCookie.value,
         sessionCookie.attributes,
       );
+
+      if (!existingUser.githubId) {
+        await db
+          .update(userTable)
+          .set({ githubId: Number(githubUser.id) })
+          .where(eq(userTable.id, existingUser.id));
+      }
+
       return new Response(null, {
         status: 302,
         headers: {
@@ -59,14 +72,8 @@ export async function GET(request: Request): Promise<Response> {
       id: userId,
       githubId: Number(githubUser.id),
       username: githubUser.login,
+      email: primaryEmail,
     });
-
-    // Replace this with your own DB client.
-    // await db.table("user").insert({
-    //   id: userId,
-    //   github_id: githubUser.id,
-    //   username: githubUser.login,
-    // });
 
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
@@ -99,4 +106,9 @@ export async function GET(request: Request): Promise<Response> {
 interface GitHubUser {
   id: string;
   login: string;
+}
+
+interface GitHubUserEmail {
+  email: string;
+  primary: boolean;
 }
