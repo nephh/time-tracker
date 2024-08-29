@@ -12,7 +12,9 @@ export const github = new GitHub(
 export const google = new Google(
   process.env.GOOGLE_CLIENT_ID!,
   process.env.GOOGLE_CLIENT_SECRET!,
-  "http://localhost:3000/login/google/callback",
+  process.env.NODE_ENV === "production"
+    ? "https://time-tracker-alpha-dusky.vercel.app/login/google/callback"
+    : "http://localhost:3000/login/google/callback",
 );
 
 export const lucia = new Lucia(adapter, {
