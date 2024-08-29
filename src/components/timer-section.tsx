@@ -1,8 +1,8 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import Timer from "./timer";
 import { Button } from "./ui/button";
+import { columns, TimerTable } from "./timer-table";
 
 export default function TimerSection() {
   const [timers, query] = api.timer.getTimers.useSuspenseQuery();
@@ -18,17 +18,11 @@ export default function TimerSection() {
   }
 
   return (
-    <div>
+    <div className="flex justify-center flex-col">
       <Button onClick={() => handleClick()} disabled={createTimer.isPending}>
         Create Timer
       </Button>
-      {timers ? (
-        timers.map((timer) => (
-          <Timer key={timer.id} id={timer.id} timerTime={timer.time} />
-        ))
-      ) : (
-        <p>No Timers</p>
-      )}
+      <TimerTable columns={columns} data={timers ?? []} />
     </div>
   );
 }

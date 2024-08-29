@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Icons } from "@/components/icons";
+import { Icons } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Link from "next/link";
