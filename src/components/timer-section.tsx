@@ -52,13 +52,13 @@ export default function TimerSection() {
                 Close
               </Button>
             </DialogClose>
-              <Button
-                type="submit"
-                variant="default"
-                onClick={() => handleClick()}
-              >
-                Create
-              </Button>
+            <Button
+              type="submit"
+              variant="default"
+              onClick={() => handleClick()}
+            >
+              Create
+            </Button>
           </DialogFooter>
         </DialogContent>
         <TimerTable columns={columns} data={timers ?? []} />

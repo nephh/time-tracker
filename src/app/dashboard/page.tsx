@@ -1,12 +1,16 @@
-import { HydrateClient } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
 import TimerSection from "@/components/timer-section";
 
 export default function Page() {
+  void api.timer.getTimers.prefetch();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
-      <div className="w-6/12">
-        <TimerSection />
+    <HydrateClient>
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <div className="w-6/12">
+          <TimerSection />
+        </div>
       </div>
-    </main>
+    </HydrateClient>
   );
 }
