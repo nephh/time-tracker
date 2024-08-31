@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  privateProcedure,
+  publicProcedure,
+} from "@/server/api/trpc";
 import { timerTable } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -20,14 +24,14 @@ export const timerRouter = createTRPCRouter({
         .where(eq(timerTable.id, input.id));
     }),
 
-  getTimers: privateProcedure.query(async ({ ctx }) => {
+  getTimers: publicProcedure.query(async ({ ctx }) => {
     const timers = await ctx.db
       .select({
         id: timerTable.id,
         time: timerTable.time,
       })
       .from(timerTable)
-      .where(eq(timerTable.userId, ctx.user.id))
+      .where(eq(timerTable.userId, "56meqvee6txpjetm"))
       .orderBy(timerTable.id);
 
     return timers;
