@@ -15,23 +15,27 @@ import {
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { useState } from "react";
+import { Icons } from "./ui/icons";
 
 export default function TimerSection() {
-  const [timers, query] = api.timer.getTimers.useSuspenseQuery();
-  const createTimer = api.timer.createTimer.useMutation();
+  const [open, setOpen] = useState(false);
+  const [timers] = api.timer.getTimers.useSuspenseQuery();
+  const utils = api.useUtils();
+  const createTimer = api.timer.createTimer.useMutation({
+    onSuccess: async () => {
+      await utils.timer.invalidate();
+    },
+  });
 
   async function handleClick() {
-    createTimer.mutate();
-  }
-
-  // This runs quite a few times after creating a timer, might be able to optimize
-  if (createTimer.isSuccess) {
-    void query.refetch();
+    await createTimer.mutateAsync();
+    setOpen(false);
   }
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button className="w-32">Create Timer</Button>
         </DialogTrigger>
@@ -48,7 +52,12 @@ export default function TimerSection() {
           <Input id="time" type="number" defaultValue={0} min={0} />
           <DialogFooter className="sm:justify-start">
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={createTimer.isPending}
+                className="w-20"
+              >
                 Close
               </Button>
             </DialogClose>
@@ -56,8 +65,14 @@ export default function TimerSection() {
               type="submit"
               variant="default"
               onClick={() => handleClick()}
+              disabled={createTimer.isPending}
+              className="w-20"
             >
-              Create
+              {createTimer.isPending ? (
+                <Icons.spinner className="h-4 w-4 animate-spin" />
+              ) : (
+                `Create`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
