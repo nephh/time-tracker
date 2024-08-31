@@ -30,10 +30,10 @@ export default function TimerSection() {
   }
 
   return (
-    <div className="flex flex-col justify-center">
+    <div className="flex flex-col items-center gap-4">
       <Dialog>
         <DialogTrigger asChild>
-          <Button>Create Timer</Button>
+          <Button className="w-32">Create Timer</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -52,9 +52,13 @@ export default function TimerSection() {
                 Close
               </Button>
             </DialogClose>
-            <Button type="submit" variant="default">
-              Create
-            </Button>
+              <Button
+                type="submit"
+                variant="default"
+                onClick={() => handleClick()}
+              >
+                Create
+              </Button>
           </DialogFooter>
         </DialogContent>
         <TimerTable columns={columns} data={timers ?? []} />
