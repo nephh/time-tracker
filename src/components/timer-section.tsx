@@ -3,6 +3,18 @@
 import { api } from "@/trpc/react";
 import { Button } from "./ui/button";
 import { columns, TimerTable } from "./timer-table";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
 
 export default function TimerSection() {
   const [timers, query] = api.timer.getTimers.useSuspenseQuery();
@@ -18,11 +30,35 @@ export default function TimerSection() {
   }
 
   return (
-    <div className="flex justify-center flex-col">
-      <Button onClick={() => handleClick()} disabled={createTimer.isPending}>
-        Create Timer
-      </Button>
-      <TimerTable columns={columns} data={timers ?? []} />
+    <div className="flex flex-col justify-center">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button>Create Timer</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create a timer</DialogTitle>
+            <DialogDescription>
+              Pick a name and starting time for your new timer.
+            </DialogDescription>
+          </DialogHeader>
+          <Label htmlFor="name">Link</Label>
+          <Input id="name" defaultValue={"My new timer"} />
+          <Label htmlFor="time">Time in seconds</Label>
+          <Input id="time" type="number" defaultValue={0} min={0} />
+          <DialogFooter className="sm:justify-start">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+            <Button type="submit" variant="default">
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+        <TimerTable columns={columns} data={timers ?? []} />
+      </Dialog>
     </div>
   );
 }
