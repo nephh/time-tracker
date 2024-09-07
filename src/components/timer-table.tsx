@@ -55,11 +55,11 @@ export function TimerTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full rounded-md border">
+    <div className="w-full rounded-md border border-zinc-700">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="border-zinc-700">
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead key={header.id}>

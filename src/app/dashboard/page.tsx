@@ -6,11 +6,9 @@ import Dashboard from "@/components/dashboard";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default async function Page() {
-  const { user } = await validateRequest();
+  const user = await validateUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  console.log(user);
 
   void api.timer.getTimers.prefetch();
 

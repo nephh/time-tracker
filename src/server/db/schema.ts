@@ -10,8 +10,6 @@ import {
   varchar,
   text,
   integer,
-  bigint,
-  numeric,
 } from "drizzle-orm/pg-core";
 
 /**
