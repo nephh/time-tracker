@@ -50,6 +50,7 @@ export interface DatabaseUserAttributes {
   username: string;
 }
 
+// Need to go back to the example and double check this is okay
 export const validateRequest = cache(async (): Promise<User | null> => {
   const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
   if (!sessionId) {

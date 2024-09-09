@@ -74,8 +74,8 @@ import {
 
 export default function Dashboard() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <aside className="absolute inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-white dark:bg-zinc-950 sm:flex">
+    <div className="flex h-full w-full">
+      <aside className="z-10 hidden h-full w-14 flex-col rounded-l-md border-r bg-white dark:bg-zinc-950 sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 sm:py-4">
           <Link
             href="#"
@@ -160,7 +160,7 @@ export default function Dashboard() {
           </Tooltip>
         </nav>
       </aside>
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex w-full flex-col sm:gap-4">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-white px-4 dark:bg-zinc-950 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <Sheet>
             <SheetTrigger asChild>
@@ -235,16 +235,25 @@ export default function Dashboard() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-white pl-8 dark:bg-zinc-950 md:w-[200px] lg:w-[320px]"
-            />
+          <div className="ml-auto max-w-md">
+            <form className="flex items-center">
+              <input
+                type="search"
+                placeholder="Search..."
+                className="w-full rounded-l-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-zinc-100 placeholder-zinc-400 transition-all duration-300 ease-in-out focus:border-transparent focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                aria-label="Search"
+              />
+              <button
+                type="submit"
+                className="rounded-r-md h-full border border-zinc-600 bg-zinc-700 px-4 py-2 text-zinc-100 transition-all duration-300 ease-in-out hover:bg-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-800"
+                aria-label="Perform search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </form>
           </div>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <main className="items-start gap-4 p-4 sm:pt-0">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <Tabs defaultValue="week">
               <div className="flex items-center">
