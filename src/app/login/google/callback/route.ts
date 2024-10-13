@@ -1,10 +1,15 @@
-import { google, lucia } from "@/lib/auth";
+import {
+  createSession,
+  generateSessionToken,
+  google,
+  setSessionTokenCookie,
+} from "@/lib/auth";
 import { cookies } from "next/headers";
 import { type GoogleTokens, OAuth2RequestError } from "arctic";
-import { generateIdFromEntropySize } from "lucia";
 import { db } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { userTable } from "@/server/db/schema";
+import { generateRandomString, alphabet } from "oslo/crypto";
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -48,13 +53,9 @@ export async function GET(request: Request): Promise<Response> {
       .where(eq(userTable.email, googleUser.email));
 
     if (existingUser) {
-      const session = await lucia.createSession(existingUser.id, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
+      const token = generateSessionToken();
+      const session = await createSession(token, existingUser.id);
+      setSessionTokenCookie(token, session.expiresAt);
 
       if (!existingUser.googleId) {
         await db
@@ -71,22 +72,26 @@ export async function GET(request: Request): Promise<Response> {
       });
     }
 
-    const userId = generateIdFromEntropySize(10); // 16 characters long
+    const userId = generateRandomString(10, alphabet("a-z", "0-9"));
 
-    await db.insert(userTable).values({
-      id: userId,
-      githubId: googleUser.sub,
-      username: googleUser.name,
-      email: googleUser.email,
-    });
+    const [user] = await db
+      .insert(userTable)
+      .values({
+        id: userId,
+        googleId: googleUser.sub,
+        username: googleUser.name,
+        email: googleUser.email,
+      })
+      .returning();
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
+    if (!user) {
+      throw Error("Error creating user");
+    }
+
+    const token = generateSessionToken();
+    const session = await createSession(token, user.id);
+    setSessionTokenCookie(token, session.expiresAt);
+
     return new Response(null, {
       status: 302,
       headers: {

@@ -1,13 +1,12 @@
 import { UserAuthForm } from "@/components/signin-form";
-import Link from "next/link";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
-  const { user } = await validateRequest();
+  const user = await validateRequest();
 
   if (user) {
-    redirect("/");
+    redirect("/dashboard");
   }
 
   return (
