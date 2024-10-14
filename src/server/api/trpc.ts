@@ -26,7 +26,7 @@ import { validateRequest } from "@/lib/auth";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const { user } = await validateRequest();
+  const user = await validateRequest();
 
   return {
     db,

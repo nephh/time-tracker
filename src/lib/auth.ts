@@ -1,8 +1,23 @@
-import { Lucia, type Session, type User } from "lucia";
-import { adapter } from "../server/db";
 import { GitHub, Google } from "arctic";
+import {
+  type User,
+  type Session,
+  sessionTable,
+  userTable,
+} from "../server/db/schema";
+import {
+  encodeBase32LowerCaseNoPadding,
+  encodeHexLowerCase,
+} from "@oslojs/encoding";
+import { sha256 } from "@oslojs/crypto/sha2";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { db } from "../server/db";
+import { eq } from "drizzle-orm";
+
+export type SessionValidationResult =
+  | { session: Session; user: User }
+  | { session: null; user: null };
 
 export const github = new GitHub(
   process.env.GITHUB_CLIENT_ID!,
@@ -17,66 +32,94 @@ export const google = new Google(
     : "http://localhost:3000/login/google/callback",
 );
 
-export const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    // this sets cookies with super long expiration
-    // since Next.js doesn't allow Lucia to extend cookie expiration when rendering pages
-    expires: false,
-    attributes: {
-      // set to `true` when using HTTPS
-      secure: process.env.NODE_ENV === "production",
-    },
-  },
-  getUserAttributes: (attributes) => {
-    return {
-      githubId: attributes.githubId,
-      googleId: attributes.googleId,
-      username: attributes.username,
-    };
-  },
-});
+export function generateSessionToken(): string {
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  const token = encodeBase32LowerCaseNoPadding(bytes);
+  return token;
+}
 
-// IMPORTANT!
-declare module "lucia" {
-  interface Register {
-    Lucia: typeof lucia;
-    DatabaseUserAttributes: DatabaseUserAttributes;
+export async function createSession(
+  token: string,
+  userId: string,
+): Promise<Session> {
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+  const session: Session = {
+    id: sessionId,
+    userId,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+  };
+  await db.insert(sessionTable).values(session);
+  return session;
+}
+
+export async function validateSessionToken(
+  token: string,
+): Promise<SessionValidationResult> {
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+  const result = await db
+    .select({ user: userTable, session: sessionTable })
+    .from(sessionTable)
+    .innerJoin(userTable, eq(sessionTable.userId, userTable.id))
+    .where(eq(sessionTable.id, sessionId));
+
+  if (!result[0]) {
+    return { session: null, user: null };
   }
+
+  const { user, session } = result[0];
+
+  if (Date.now() >= session.expiresAt.getTime()) {
+    await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
+    return { session: null, user: null };
+  }
+
+  if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
+    session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+    await db
+      .update(sessionTable)
+      .set({
+        expiresAt: session.expiresAt,
+      })
+      .where(eq(sessionTable.id, session.id));
+  }
+
+  return { session, user };
 }
 
-export interface DatabaseUserAttributes {
-  githubId: number;
-  googleId: number;
-  username: string;
+// Use this function when we want a user to be able to logout
+export async function invalidateSession(sessionId: string): Promise<void> {
+  await db.delete(sessionTable).where(eq(sessionTable.id, sessionId));
 }
 
-// Need to go back to the example and double check this is okay
+export function setSessionTokenCookie(token: string, expiresAt: Date): void {
+  cookies().set("session", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+// Use this function when we want a user to be able to logout
+export function deleteSessionTokenCookie(): void {
+  cookies().set("session", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/",
+  });
+}
+
 export const validateRequest = cache(async (): Promise<User | null> => {
-  const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
-  if (!sessionId) {
+  const token = cookies().get("session")?.value ?? null;
+  if (!token) {
     return null;
   }
 
-  const { session, user } = await lucia.validateSession(sessionId);
-  // next.js throws when you attempt to set cookie when rendering page
-  try {
-    if (session?.fresh) {
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
-    }
-    if (!session) {
-      const sessionCookie = lucia.createBlankSessionCookie();
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
-    }
-  } catch {}
+  const result = await validateSessionToken(token);
 
-  return user;
+  return result.user;
 });
